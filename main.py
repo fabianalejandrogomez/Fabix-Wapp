@@ -16,7 +16,7 @@ async def root():
 @app.get("/aplicar_openai", status_code=status.HTTP_200_OK, tags=["OpenAI"])
 def get_all_fruits(pregunta: OPenAISchema):
 
-    openai.api_key = "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"
+    openai.api_key = ""
 
     response = openai.Completion.create(
     engine="text-davinci-002",
