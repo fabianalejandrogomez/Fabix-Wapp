@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Body, HTTPException
+from fastapi import FastAPI, Body, HTTPException, Request
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 import openai
@@ -9,55 +9,44 @@ import os
 app=FastAPI()
 
 load_dotenv()
-
 openai.api_key = os.getenv('SECRET_KEY')
-TOKEN = os.getenv('TELEGRAM_TOKEN')
-TELEGRAM_SEND_MESSAGE_URL = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
 
-class Prompt(BaseModel):
-    text: str = Field(min_lenght=10, max_lenght=100)
+class Item(BaseModel):
+    entry: list
 
-@app.get("/")
-async def root():
-    return {"message":"Hello World from Fabian"}
-
-@app.get("/test")
-async def root():
-    return {"message":"this is test"}
-
-
-@app.post('/chat')
-def generate_response(prompt: Prompt):
-    text_lenght = 1000
-    gpt_model = "text-davinci-002"
-    response = openai.Completion.create(
-        engine=gpt_model,
-        prompt=prompt.text,
-        max_tokens=text_lenght,
-        n=1,
-        stop=None,
-        temperature=0.5
-    )
-    return response['choices'][0]['text']
-
-    
 @app.post("/webhook/")
-async def process_webhook(data: dict = Body(...)):
-    chat_id = data["message"]["chat"]["id"]
-    text = data["message"]["text"]
-    text_lenght = 1000
-    gpt_model = "text-davinci-002"
-    response = openai.Completion.create(
-        engine=gpt_model,
-        prompt=text,
-        max_tokens=text_lenght,
-        n=1,
-        stop=None,
-        temperature=0.5
-    )
+async def webhook_whatsapp(item: Item, request: Request, hub_verify_token: Optional[str] = None, hub_challenge: Optional[str] = None):
+    if hub_verify_token == "HolaFaby":
+        return {"hub.challenge": hub_challenge}
+    else:
+        return {"Error": "Error de autentificacion."}
+    
+    data = item.dict()
 
-    response_text = response.choices[0].text.strip()  # Get the response text
+    telefonoCliente=data['entry'][0]['changes'][0]['value']['messages'][0]['from']
+    mensaje=data['entry'][0]['changes'][0]['value']['messages'][0]['text']['body']
+    idWA=data['entry'][0]['changes'][0]['value']['messages'][0]['id']
+    timestamp=data['entry'][0]['changes'][0]['value']['messages'][0]['timestamp']
 
-    requests.post(TELEGRAM_SEND_MESSAGE_URL, data={"chat_id": chat_id, "text": response_text})
-
-    return {"ok": True}
+    if mensaje is not None:
+        import openai
+        model_engine = "text-davinci-003"
+        prompt = mensaje
+        completion = openai.Completion.create(engine=model_engine,
+                                            prompt=prompt,
+                                            max_tokens=1024,
+                                            n=1,
+                                            stop=None,
+                                            temperature=0.7)
+        respuesta=""
+        for choice in completion.choices:
+            respuesta=respuesta+choice.text.strip()
+            print(f"Response: %s" % choice.text.strip())
+        
+        respuesta=respuesta.replace("\\n","\\\n")
+        respuesta=respuesta.replace("\\","")
+        
+        with open("texto.txt", "w") as f:
+            f.write(respuesta)
+        
+        return {"status": "success"}

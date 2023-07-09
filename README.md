@@ -3,14 +3,12 @@ Complete Guide for hosting fastapi. Below are the steps for hosting fastapi on a
 [Click here for complete video](https://youtu.be/_719QPPARUw)
 
 <h1 align="center">
-  <a href="https://github.com/smurfcoders/fastapi-hosting">
-    <img src="https://raw.githubusercontent.com/smurfcoders/fastapi-hosting/master/Smurf%20coders.jpg">
-  </a>
+<div align="center">
+  Host any Fastapi application by using this tutorial
+</div>
 </h1>
 
-<div align="center">
-  Host any Fastapi application by using this tutorial - Subscribe to our youtube channel !
-</div>
+
 
 <div align="center">
 <br />
